@@ -57,6 +57,11 @@ func main () {
 		fmt.Println("Read ", sub.NumTrips() ," trips")
 	}
 
+
+	// VALIDATE
+	if !sub.Validate(&gifts) {
+		fmt.Println("Solution is NOT valid")
+	}
 	
 	// SCORE ------------------------------------------------------------	
 	totalWRW := sub.Score(&gifts)
