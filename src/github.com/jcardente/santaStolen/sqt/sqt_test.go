@@ -231,33 +231,74 @@ func TestSphereNodeSplit(t *testing.T) {
 	}
 
 	// Split and check each has one
+	s.Split(func (tri *Triangle) bool {
+		retval := false
+		if len(tri.Nodes) > 1 {
+			retval = true
+		}
+		return retval
+	})
+
+	if len(s.Triangles) != (8*4) {
+		t.Fatal("Incorrect number of triangles after split ", len(s.Triangles))
+	}
+
+	for _, tri := range s.Triangles {
+		if (len(tri.Nodes) != 1) {
+			t.Fatal("Incorrect number of nodes after split")
+		}
+	}
+
+}
+
+
+func TestSphereSplitUneven(t *testing.T) {
+
+	coords := [][]float64{
+		{22.5, 22.5},
+		{22.5, 45.0},
+		{22.5, 67.5},
+		{67.5, 45.0}}
+
+
+	s := NewSQT()
+	for q := 0; q < 1; q++ {
+		for i, ll := range coords {
+			s.AddNode(q*len(coords)+i*2,1.0, ll[0], ll[1] + float64(q)*90.0)
+			s.AddNode(q*len(coords)+i*2+1,1.0, ll[0] * -1.0, ll[1] + float64(q)*90.0)			
+		}
+	}
 	
-	////////////////////////////////////////
-	// tri := NewTriangle(0,0,1,true)
+	for i,ft := range s.Triangles {
+		if (i==0) || (i==4) {
+			if ft.NumNodes() !=4  {
+				t.Fatal("Face didn't get enough nodes", i)
+			}				
+		} else {
+			if ft.NumNodes() !=0  {
+				t.Fatal("Face didn't get enough nodes", i)
+			}				
+		}
+	}
 
-	// for i, xy := range coords {
-	// 	n := NewNode(xy[0],xy[1],i,1.0)
-	// 	tri.AddNode(n)
-	// }
+	// Split and check each has one
+	s.Split(func (tri *Triangle) bool {
+		retval := false
+		if len(tri.Nodes) > 1 {
+			retval = true
+		}
+		return retval
+	})
 
-	// if tri.NumNodes() != 4 {
-	// 	t.Fatal("Incorrect number of nodes before split")
-	// }
+	if len(s.Triangles) != (2*4+6) {
+		t.Fatal("Incorrect number of triangles after split ", len(s.Triangles))
+	}
 
-	// newTries := tri.Split()
-
-	// if len(newTries) != 4 {
-	// 	t.Fatal("Incorrect number of triangles after split")
-	// }
+	for _, tri := range s.Triangles {
+		if (len(tri.Nodes) != 1) && (len(tri.Nodes) != 0) {
+			t.Fatal("Incorrect number of nodes after split")
+		}
+	}
 	
-	// //for i, nt := range newTries {
-	// //	t.Log("s: ",i," c:", nt.NumNodes()) 
-	// //}
-	
-	// for _, nt := range newTries {
-	// 	if nt.NumNodes() != 1 {
-	// 		t.Fatal("Incorrect number of nodes after split")
-	// 	}		
-	// }
 }
 

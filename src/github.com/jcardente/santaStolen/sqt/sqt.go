@@ -99,26 +99,27 @@ func triangleProject(lat float64, lon float64, maxlen float64) (float64, float64
 }
 
 
-func (s *SphereQuadTree) Split() {
+func (s *SphereQuadTree) Split(cb func(t *Triangle) bool) {
 
 	s.Splitted = true
 	
 	// Recurisevly split until there's nothing left to do.
-	newTris  := []*Triangle{}
 	anySplit := true
-
-	for anySplit {
+	for anySplit == true {
+		newTris  := []*Triangle{}	
 		anySplit = false
 		for _, tri := range s.Triangles {			
-			if len(tri.Nodes) > 1 {
+			if cb(tri) {
 				st := tri.Split()
 				newTris = append(newTris, st...)
 				anySplit = true
+			} else {
+				newTris = append(newTris, tri)
 			}
 
 		}
+		s.Triangles = newTris			
 	}
-	
 }
 
 
