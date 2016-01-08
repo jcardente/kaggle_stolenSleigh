@@ -56,6 +56,23 @@ func (to TripOptList) Less(i, j int) bool {
 }
 
 
+
+type TripList []*trip.Trip
+
+func (tl TripList) Len() int {
+	return len(tl)
+}
+
+func (tl TripList) Swap(i, j int) {
+	tl[i], tl[j] = tl[j], tl[i]
+}
+
+func (tl TripList) Less(i, j int) bool {
+	// Sort from lighter to heavier
+	return tl[i].Weight > tl[j].Weight
+}
+
+
 func (s *Submission) OptimizeTrips(gifts *map[int]gift.Gift) {
 
 	// OPTIMIZE BY LATITUDE
@@ -72,13 +89,10 @@ func (s *Submission) OptimizeTrips(gifts *map[int]gift.Gift) {
 		tripsByLon[b] = append(tripsByLon[b], NewTripOpt(t, t.GetLatitude(gifts)))
 	}
 
-//	fmt.Println("Buckets: ", len(tripsByLon))
 	MergedTrips := map[int]*trip.Trip{}	
 	for _, tol := range tripsByLon {
-//		fmt.Print("Optimzing bucket ", bid, "....")
 	 	sort.Sort(tol)		
 		skipTrip := map[*trip.Trip]bool{}
-		mergeCount := 0
 		for i := 0; i < len(tol); i++ {
 			t1 := tol[i].T
 			if (skipTrip[t1] == true) {
@@ -86,38 +100,89 @@ func (s *Submission) OptimizeTrips(gifts *map[int]gift.Gift) {
 			}
 			
 			tnew := &trip.Trip{t1.Id, t1.Gifts, t1.Weight, t1.WRW}
-			ttest := trip.TripNew(-1)
 			for j:= i+1; j < len(tol); j++ {
 				t2 := tol[j].T
 				if (skipTrip[t2] == true) {
 					continue
 				}
 
+				if (tnew.Weight + t2.Weight) > trip.WeightLimit {
+					continue
+				}
+			
 				// Make sure to complete closest trip first
-				ttest.Gifts = append(ttest.Gifts, t2.Gifts...)
+				ttest := trip.TripNew(-1)				
+				ttest.Gifts = append(ttest.Gifts, tnew.Gifts...)
 				ttest.Gifts = append(ttest.Gifts, t1.Gifts...)				
 
+				
 				newscore := ttest.Score(gifts)
 				if (newscore < (tnew.WRW + t2.WRW)) {
 					tnew.Gifts = append(t2.Gifts, tnew.Gifts...)
 					skipTrip[t2] = true
 					tnew.Score(gifts)
-					mergeCount++
+					tnew.CalcWeight(gifts)
 				}				
 			}
 			MergedTrips[tnew.Id] = tnew
 		}
-//		fmt.Println(" merged ", mergeCount)
 	}
 
 	fmt.Println(" LATOPT: ", len(s.Trips), " --> ", len(MergedTrips))
 	s.Trips = MergedTrips
 
 
+	
 	// OPTIMIZE BY SPACE AVAILABLE
-	MergedTrips := map[int]*trip.Trip{}
-	
-	
+	MergedTrips = map[int]*trip.Trip{}
+	unfilledTrips := TripList{}
+	for _, t := range s.Trips {
+		t.CalcWeight(gifts)
+		t.CacheScore(gifts)		
+		if ((trip.WeightLimit - t.Weight) > 500) {
+			unfilledTrips = append(unfilledTrips, t)
+		} else {
+			MergedTrips[t.Id] = t
+		}		
+	}
+
+	fmt.Println("Unfilled: ", len(unfilledTrips))
+	sort.Sort(unfilledTrips)
+	skipTrip := map[*trip.Trip]bool{}	
+	for i := 0; i < len(unfilledTrips); i++ {
+		t1 := unfilledTrips[i]
+		if (skipTrip[t1] == true) {
+			continue
+		}
+		
+		tnew := &trip.Trip{t1.Id, t1.Gifts, t1.Weight, t1.WRW}
+		for j:=i+1; j < len(unfilledTrips); j++ {
+			t2 := unfilledTrips[j]
+			if (skipTrip[t2] == true) {
+				continue
+			}
+
+			if (tnew.Weight + t2.Weight) > trip.WeightLimit {
+				continue
+			}
+
+			ttest := trip.TripNew(-1)					
+			ttest.Gifts = append(ttest.Gifts, t2.Gifts...)
+			ttest.Gifts = append(ttest.Gifts, tnew.Gifts...)				
+			newscore := ttest.Score(gifts)
+			if (newscore <= (tnew.WRW + t2.WRW)) {
+				tnew.Gifts = append(t2.Gifts, tnew.Gifts...)
+				skipTrip[t2] = true
+				tnew.Score(gifts)
+				tnew.CalcWeight(gifts)
+			}
+		}
+		MergedTrips[tnew.Id] = tnew
+	}
+	fmt.Println(" SPACEOPT: ", len(s.Trips), " --> ", len(MergedTrips))
+	s.Trips = MergedTrips
+	fmt.Println( "CHECK: ", len(s.Trips))
+
 }
 
 func (s *Submission) CountUndersize(gifts *map[int]gift.Gift) (int, float64) {
