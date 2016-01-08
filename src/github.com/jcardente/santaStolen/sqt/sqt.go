@@ -38,11 +38,11 @@ type SphereQuadTree struct {
 
 func NewSQT() *SphereQuadTree {	
 	faces  := make([]*Triangle, 8);
-        MaxLen := 1024.0
+        MaxLen := math.Pow(2,20)
 	
 	for i:=0; i < 4; i++ {
 		faces[i*2]   = NewTriangle(0,0, MaxLen, true)
-		faces[i*2+1] = NewTriangle(0,0, MaxLen, false)
+		faces[i*2+1] = NewTriangle(0,0, MaxLen, true)
 	}
 	
 	return &SphereQuadTree{faces, MaxLen, false}
@@ -57,6 +57,9 @@ func (s *SphereQuadTree) AddNode(id int, w float64, lat float64, lon float64) {
 		os.Exit(1)
 	}
 
+	if (lon < 0) {
+		lon = 360 + lon
+	}
 	faceIdx := whichFace(lat, lon)
 
 	// Determine relative lat/lon
@@ -65,7 +68,11 @@ func (s *SphereQuadTree) AddNode(id int, w float64, lat float64, lon float64) {
 
 	// Determine XY coordinates for lat/long in RADIANS
 	x, y := triangleProject(dlat, dlon, s.MaxLen)
-	
+
+	if (x < 0) || (y < 0) {
+		fmt.Println(" !!! Bad triangle project: ", x,",",y)
+		os.Exit(1)
+	}
 	// Create node
 	n := NewNode(x,y,id,w)
 	
@@ -104,21 +111,22 @@ func (s *SphereQuadTree) Split(cb func(t *Triangle) bool) {
 	s.Splitted = true
 	
 	// Recurisevly split until there's nothing left to do.
-	anySplit := true
-	for anySplit == true {
+	splitCount := len(s.Triangles)
+	for splitCount > 0 {
 		newTris  := []*Triangle{}	
-		anySplit = false
+		splitCount = 0
 		for _, tri := range s.Triangles {			
 			if cb(tri) {
+				splitCount++
 				st := tri.Split()
 				newTris = append(newTris, st...)
-				anySplit = true
 			} else {
 				newTris = append(newTris, tri)
 			}
 
 		}
-		s.Triangles = newTris			
+		s.Triangles = newTris		
+
 	}
 }
 
@@ -171,33 +179,53 @@ func (t *Triangle) WeightNodes() float64 {
 
 func (t *Triangle) Split() []*Triangle {
 	dircoef := 1.0
-	if !t.Upward {
+	if (t.Upward == false) {
 		dircoef = -1.0
 	}
-
 	
 	halfLen := t.Len/2
+	halfUp  := _sqrt3/2*halfLen*dircoef
+	
 	Subs    := make([]*Triangle, 4);
 	Subs[0] = NewTriangle(t.X, t.Y, halfLen, t.Upward)
 	Subs[1] = NewTriangle(t.X + halfLen,   t.Y, halfLen, t.Upward)
 	Subs[2] = NewTriangle(t.X + halfLen/2, t.Y + _sqrt3/2*halfLen*dircoef, halfLen, t.Upward)
 	Subs[3] = NewTriangle(t.X + halfLen/2, t.Y + _sqrt3/2*halfLen*dircoef, halfLen, !t.Upward)
 
+
+	for _, xx := range Subs {
+		if (!xx.Upward) && (xx.Y ==0) {
+			fmt.Println("WTF: ", t.X,",",t.Y," ",t.Len," ",t.Upward)
+			fmt.Println(" xx: ", xx.X,",",xx.Y," ",xx.Len," ",xx.Upward)
+			fmt.Println("  halfLen:", halfLen, " halfUp:", halfUp)
+			os.Exit(1)
+		}
+	}
+
+	
         for _, n := range t.Nodes {
 		dx := math.Abs(n.X - t.X)
 		dy := math.Abs(n.Y - t.Y)
 
+		if (dy > t.Len) || (dx > t.Len) {
+			fmt.Println("Warning dx/dy out of bounds ",t.Len,"--", dx, ",",dy)
+			fmt.Println("  Node: ", n.X,",",n.Y)
+			fmt.Println("   Tri: ", t.X,",",t.Y)			
+			os.Exit(1)
+		}
+		
 		if (dy > _sqrt3*halfLen/2) {
 			Subs[2].AddNode(n)
-		} else if (dy < (_sqrt3*(t.Len - 2*dx)/2)) {
-
+		} else if ((dx <= halfLen ) && (dy < (_sqrt3*(t.Len - 2*dx)/2))) {
 			Subs[0].AddNode(n)
-		} else if (dy < (_sqrt3*(2*dx - t.Len)/2)) {
+		} else if ((dx > halfLen) && (dy < (_sqrt3*(2*dx - t.Len)/2))) {
 			Subs[1].AddNode(n)
 		} else {
 			Subs[3].AddNode(n)
 		}
+		
 	}
 
+ 
   return Subs
 }

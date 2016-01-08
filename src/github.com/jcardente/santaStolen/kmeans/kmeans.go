@@ -2,14 +2,17 @@ package kmeans
 
 import (
 	"fmt"
+	"os"
 	"math"
 	"math/rand"
 	"github.com/jcardente/santaStolen/sqt"
 )
 
 type Centroid struct {
-	X,Y float64
+	Id     int
+	X,Y    float64
 	Weight float64
+	Nodes  []*sqt.Node
 }
 
 
@@ -22,35 +25,50 @@ func initCentroids(nodes []*sqt.Node, k int) *[]Centroid {
 	// Pick initial centroids
 	centroids := make([]Centroid, k)
 	for c, i := range (rand.Perm(len(nodes)))[:k] {
-		centroids[c] = Centroid{nodes[i].X, nodes[i].Y,0}
+		centroids[c] = Centroid{c, nodes[i].X, nodes[i].Y,0, []*sqt.Node{}}
 	}
 
 	return &centroids
 }
 
-func recomputeCentroid(nodes []*sqt.Node) Centroid {
-	centroid := Centroid{0,0,0}
-	for _, n := range nodes {
-		centroid.X += n.X
-		centroid.Y += n.Y
+
+func centroidWss(c *Centroid) float64 {
+	wss := 0.0
+	for _, n := range c.Nodes {
+		wss += distance(*c, n)
 	}
 
-	count := float64(len(nodes))
-	centroid.X = centroid.X/count
-	centroid.Y = centroid.Y/count
+	return wss/float64(len(c.Nodes))
+}
+
+func recomputeCentroid(centroid *Centroid) {
+
+	newX := 0.0
+	newY := 0.0
+	for _, n := range centroid.Nodes {
+		newX += n.X
+		newY += n.Y
+	}
+
+	count := float64(len(centroid.Nodes))
+	newX = newX/count
+	newY = newY/count
+
+	centroid.X = newX
+	centroid.Y = newY
+
 	centroid.Weight = 0
-	
-	return centroid
+	centroid.Nodes  = []*sqt.Node{}
 }
 
 func closestCentroid(n *sqt.Node, maxWeight float64, centroids *[]Centroid) int {
 	closest := -1
 	dist    := math.Inf(0)
-	for i, c := range *centroids {
+	for _, c := range *centroids {
 		d:= distance(c, n)
 		if (d < dist) && ((n.Weight + c.Weight) <= maxWeight) {
 			dist = d
-			closest = i
+			closest = c.Id
 		}
 	}
 
@@ -58,10 +76,7 @@ func closestCentroid(n *sqt.Node, maxWeight float64, centroids *[]Centroid) int 
 }
 
 
-func Cluster(nodes []*sqt.Node, k int, maxWeight float64) map[int][]*sqt.Node {
-
-	// Store each cluster as a list of node pointers
-	clusts:= map[int][]*sqt.Node{}
+func Cluster(nodes []*sqt.Node, k int, maxWeight float64) [][]*sqt.Node {
 
 	// Initialize centroids using randomly selected
 	// nodes
@@ -73,41 +88,90 @@ func Cluster(nodes []*sqt.Node, k int, maxWeight float64) map[int][]*sqt.Node {
 		members[n] = -1
 	}
 	
-	// Loop until memberships don't change
+	// Loop until clusters stabilize
 	converged := false
-	for (!converged) {
-		converged = true
-
-		for i:=0; i < len(clusts); i++ {
-			clusts[i] = []*sqt.Node{}
-		}
-
+	tryCount  := 0
+	deltaLast := math.Inf(0)
+	for (converged == false) {
+		tryCount++
+		changeCount := 0.0
+//		fmt.Println(" ***********************************")				
 		for _, n := range nodes {
 			cid := closestCentroid(n, maxWeight, centroids)
-			if (cid >=0 ) {
-				(*centroids)[cid].Weight += n.Weight
-				clusts[cid] = append(clusts[cid], n)
-			} else {
+			
+			if (cid < 0 ) {
 				// Uh oh, didn't find a cluster to fit into
-				// Make a new one
-				_c := append(*centroids, Centroid{n.X, n.Y, n.Weight})
+				// Make a new one				
+				cid = len(*centroids)
+				_c := append(*centroids, Centroid{cid,n.X, n.Y, 0.0, []*sqt.Node{}})
 				centroids = &_c
-				cid = len(*centroids)-1
-				clusts[cid] = []*sqt.Node{n}
+
+				// DEBUG
+				// if (len(*centroids) - k) > 5 {
+				// 	fmt.Println("Yikes ", k," ", len(*centroids), " ", tryCount)
+				// 	cw := 0.0
+				// 	for _, ccc := range *centroids {
+				// 		fmt.Println("C:", ccc.Id, " L:",len(ccc.Nodes), " W:", ccc.Weight)
+				// 		cw += ccc.Weight
+				// 	}
+					
+				// 	fmt.Println("")
+
+
+				// 	nw := 0.0
+				// 	for _, n := range nodes {
+				// 		nw += n.Weight
+				// 	}
+					
+				// 	fmt.Println("Nodes: N:", len(nodes), " Weight:", nw, " CW:", cw)
+				// 	os.Exit(1)
+				// }
+				// DEBUG
 			}
+
+			(*centroids)[cid].Weight += n.Weight
+			(*centroids)[cid].Nodes = append((*centroids)[cid].Nodes, n)
 			
 			if (cid != members[n]) {
 				members[n]  = cid
-				converged   = false
-			}
+				changeCount++
+
+			}		
 		}
 
-		fmt.Println("LCents: ", len(*centroids)," LClusts: ", len(clusts))
-		if (!converged) {
-			// Update cluster centroids
-			for cid, clust := range clusts {
-				(*centroids)[cid] = recomputeCentroid(clust)
+
+		// Check for convergence
+		delta := 0.0
+		for cid, _ := range *centroids {
+			delta += centroidWss(&(*centroids)[cid])
+		}
+		dchange := math.Abs(deltaLast - delta)/delta
+
+		
+		if (delta == 0) || (dchange <= 0.1) {
+			converged = true
+		} else {			
+			for cid, _ := range *centroids {
+				recomputeCentroid(&(*centroids)[cid])
 			}
+		}
+		
+		deltaLast = delta
+	}
+
+	clusts:= make([][]*sqt.Node, len(*centroids))
+	for cid, _ := range *centroids {
+		clusts[cid] = (*centroids)[cid].Nodes
+		www := (*centroids)[cid].Weight
+
+		if (www > maxWeight) {
+			fmt.Print("Centroid overweight")
+			os.Exit(1)
+		}
+
+		if len(clusts[cid]) != len((*centroids)[cid].Nodes) {
+			fmt.Println("Error making cluster list")
+			os.Exit(1)
 		}
 	}
 	

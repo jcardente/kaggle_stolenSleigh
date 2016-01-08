@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"math/rand"
 //	"strconv"
 //	"github.com/jcardente/santaStolen/types/location"
 	"github.com/jcardente/santaStolen/types/gift"
@@ -20,7 +21,8 @@ func main () {
 	
 	giftFile := flag.String("g","","Gift file")
         subFile  := flag.String("s","","Submission file")
-        alg      := flag.String("a","","Algorithm")	
+        alg      := flag.String("a","","Algorithm")
+	seed     := flag.Int64("r",1,"Random Seed")
 	quiet    := flag.Bool("q",false,"Only print result")
 	flag.Parse()
 
@@ -34,8 +36,11 @@ func main () {
 		fmt.Println("Using gift file: ", *giftFile)
 		fmt.Println(" Using sub file: ",  *subFile)
 		fmt.Println("Using algorithm: ",  *alg)
+		fmt.Println("Using seed: ", *seed)		
 	}
 
+	rand.Seed(*seed)
+	
 	// LOAD GIFTS ------------------------------------------------------------
         gifts, err := gift.LoadGifts(*giftFile)
 	if err != nil {

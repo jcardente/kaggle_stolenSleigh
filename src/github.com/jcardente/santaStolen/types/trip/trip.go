@@ -2,6 +2,7 @@ package trip
 
 import (
 	"fmt"
+	"os"
 	"github.com/jcardente/santaStolen/types/location"
 	"github.com/jcardente/santaStolen/types/gift"
 )
@@ -10,7 +11,7 @@ import (
 
 const (
 	sleighWeight = 10.0
-	weightLimit  = 1000.0
+	WeightLimit  = 1000.0
 )
 
 
@@ -33,16 +34,22 @@ func (t *Trip) Score(gifts *map[int]gift.Gift) float64 {
 	lastPos    := location.NorthPole
 	tripWeight := sleighWeight
  	tripWRW    := 0.0
-
+	giftWeight := 0.0
+	
+	if len(t.Gifts) == 0 {
+		fmt.Println("Warning, empty trip")
+		os.Exit(1)
+	}
 	gids := t.Gifts
 	for i:= len(gids) -1; i >=0; i-- {
 		g := (*gifts)[gids[i]]
 		tripWRW    += location.Dist(g.Location, lastPos) * tripWeight
 		lastPos     = g.Location
 		tripWeight += g.Weight
+		giftWeight += g.Weight
 	}
 
-	if (tripWeight > weightLimit) {
+	if (giftWeight > WeightLimit) {
 		fmt.Println("Warning: Trip ", t.Id, " over weight limit")
 	}
 	tripWRW  += location.Dist(location.NorthPole,
