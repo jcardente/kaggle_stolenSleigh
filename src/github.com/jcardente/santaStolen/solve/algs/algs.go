@@ -6,7 +6,7 @@ import (
 	"github.com/jcardente/santaStolen/types/submission"
 )
 
-type AlgFunc func(gifts *map[int]gift.Gift) submission.Submission
+type AlgFunc func(gifts *map[int]gift.Gift) *submission.Submission
 
 var Algs = createAlgDispatch()
 

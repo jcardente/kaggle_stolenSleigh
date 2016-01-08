@@ -13,7 +13,7 @@ func init () {
 }
 
 
-func Naive(gifts *map[int]gift.Gift) submission.Submission {
+func Naive(gifts *map[int]gift.Gift) *submission.Submission {
 
 	fmt.Println("Called Naive function")
 	

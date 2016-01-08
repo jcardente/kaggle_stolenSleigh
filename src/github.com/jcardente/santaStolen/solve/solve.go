@@ -52,12 +52,17 @@ func main () {
 		fmt.Println("Read ", len(gifts) ," gifts")		
 	}
 
-
+	
 	// RUN SELECTED ALGORITHM -----------------------------------------------
 	fmt.Println("Number of algs", len(algs.Algs))
 	s := (algs.Algs[*alg])(&gifts)
 
 
+	// OPTIMIZE -------------------------------------------------------------
+	s.OptimizeTrips(&gifts)
+	c, w :=  s.CountUndersize(&gifts)
+        fmt.Println("Undersized: ", c, " AvgW:", w)
+	
         // SCORE AND SAVE -------------------------------------------------------
 	
 	fmt.Println("Number of trips: ", s.NumTrips())

@@ -18,11 +18,10 @@ func init () {
 }
 
 
-func Cluster(gifts *map[int]gift.Gift) submission.Submission {
+func Cluster(gifts *map[int]gift.Gift) *submission.Submission {
 
 	fmt.Println("Called Cluster algorithm")
-
-
+	
 	// Create SQT
 	fmt.Println("Creating spherical quadtree")
 	s := sqt.NewSQT()
@@ -35,7 +34,7 @@ func Cluster(gifts *map[int]gift.Gift) submission.Submission {
 	fmt.Print("Splitting the SQT....")
 	s.Split(func (tri *sqt.Triangle) bool {
 		retval := false
-		if (math.Ceil(tri.Weight / trip.WeightLimit) > 5) || (len(tri.Nodes) > 50){
+		if (math.Ceil(tri.Weight / trip.WeightLimit) > 5) || (len(tri.Nodes) > 20){
 		 	retval = true
 		 }
 		return retval
@@ -61,9 +60,7 @@ func Cluster(gifts *map[int]gift.Gift) submission.Submission {
 			clusts := kmeans.Cluster(tri.Nodes, k, trip.WeightLimit)
 		
 			// For each cluster, create a trip
-			foo := 0
 			for _, clust := range clusts {
-				foo += len(clust)
 				t := trip.TripNew(tid)
 				for _, n := range clust {
 					t.AddGift(n.Id)
@@ -73,6 +70,6 @@ func Cluster(gifts *map[int]gift.Gift) submission.Submission {
 			}
 		}
 	}
-
+	
 	return sub
 }
