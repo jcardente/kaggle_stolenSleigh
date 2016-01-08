@@ -78,10 +78,8 @@ func (s *Submission) OptimizeTrips(gifts *map[int]gift.Gift) {
 	// OPTIMIZE BY LATITUDE
 	tripsByLon := map[int]TripOptList{}
 	res := 0.5
-        for _, t := range s.Trips {
-		
-		t.OptimizeOrder(gifts)
-		
+        for _, t := range s.Trips {		
+		t.OptimizeOrder(gifts)		
 		t.CalcWeight(gifts)
 		t.CacheScore(gifts)
 		l := t.GetLongitude(gifts)
@@ -114,7 +112,6 @@ func (s *Submission) OptimizeTrips(gifts *map[int]gift.Gift) {
 				ttest := trip.TripNew(-1)				
 				ttest.Gifts = append(ttest.Gifts, tnew.Gifts...)
 				ttest.Gifts = append(ttest.Gifts, t1.Gifts...)				
-
 				
 				newscore := ttest.Score(gifts)
 				if (newscore < (tnew.WRW + t2.WRW)) {
@@ -139,7 +136,7 @@ func (s *Submission) OptimizeTrips(gifts *map[int]gift.Gift) {
 	for _, t := range s.Trips {
 		t.CalcWeight(gifts)
 		t.CacheScore(gifts)		
-		if ((trip.WeightLimit - t.Weight) > 500) {
+		if ((trip.WeightLimit - t.Weight) > 100) {
 			unfilledTrips = append(unfilledTrips, t)
 		} else {
 			MergedTrips[t.Id] = t
@@ -181,7 +178,7 @@ func (s *Submission) OptimizeTrips(gifts *map[int]gift.Gift) {
 	}
 	fmt.Println(" SPACEOPT: ", len(s.Trips), " --> ", len(MergedTrips))
 	s.Trips = MergedTrips
-	fmt.Println( "CHECK: ", len(s.Trips))
+
 
 }
 

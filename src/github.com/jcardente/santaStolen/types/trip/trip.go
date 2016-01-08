@@ -47,8 +47,10 @@ func (t *Trip) OptimizeOrder(gifts *map[int]gift.Gift) {
 	heaviestGid := -1
 	maxCost     := 0.0
 	gids        := t.Gifts
+	tripWeight  := 0.0
 	for _, gid := range gids  {
 		g := (*gifts)[gid]
+		tripWeight += g.Weight
 		cost := location.Dist(location.NorthPole, g.Location) * g.Weight
 		if (cost > maxCost) {
 			heaviestGid = gid
@@ -67,13 +69,14 @@ func (t *Trip) OptimizeOrder(gifts *map[int]gift.Gift) {
 
 	// Loop until no remaining gifts
 	lastGid := heaviestGid
+	tripWeight -= (*gifts)[lastGid].Weight
 	for len(remGifts) > 0 {
 		bestGid  := -1
 		bestCost := math.Inf(0)
 		lastG := (*gifts)[lastGid]
 		for gid, _ := range remGifts {
 			g := (*gifts)[gid]
-			cost := location.Dist(lastG.Location, g.Location) * g.Weight
+			cost := location.Dist(lastG.Location, g.Location) * tripWeight
 			if (cost < bestCost) {
 				bestGid = gid
 				bestCost = cost
@@ -82,6 +85,7 @@ func (t *Trip) OptimizeOrder(gifts *map[int]gift.Gift) {
 
 		// Add to new list and remove from map
 		newGids = append(newGids, bestGid)
+		tripWeight -= (*gifts)[bestGid].Weight
 		delete(remGifts, bestGid)		
 	}
 
