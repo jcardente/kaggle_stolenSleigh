@@ -41,6 +41,7 @@ func (t *Trip) CalcWeight(gifts *map[int]gift.Gift) {
 	}
 }
 
+
 func (t *Trip) OptimizeOrder(gifts *map[int]gift.Gift) {
 
 	// Find the gift with the highest cost

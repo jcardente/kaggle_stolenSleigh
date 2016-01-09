@@ -28,7 +28,6 @@ func Cluster(gifts *map[int]gift.Gift) *submission.Submission {
 	for _, g := range (*gifts) {
 		s.AddNode(g.Id, g.Weight, g.Location.Lat, g.Location.Lon)
 	}
-
 	
 	// Split the SQT
 	fmt.Print("Splitting the SQT....")
