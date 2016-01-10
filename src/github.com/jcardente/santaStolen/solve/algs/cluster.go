@@ -33,7 +33,7 @@ func Cluster(gifts *map[int]gift.Gift) *submission.Submission {
 	fmt.Print("Splitting the SQT....")
 	s.Split(func (tri *sqt.Triangle) bool {
 		retval := false
-		if (math.Ceil(tri.Weight / trip.WeightLimit) > 5) || (len(tri.Nodes) > 20){
+		if (math.Ceil(tri.Weight / trip.WeightLimit) > 2) || (len(tri.Nodes) > 10){
 		 	retval = true
 		 }
 		return retval
