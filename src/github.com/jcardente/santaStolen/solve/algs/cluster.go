@@ -3,8 +3,6 @@ package algs
 import (
 	"fmt"
 	"math"
-//	"os"
-//	"github.com/jcardente/santaStolen/types/location"	
 	"github.com/jcardente/santaStolen/types/gift"
 	"github.com/jcardente/santaStolen/types/trip"	
 	"github.com/jcardente/santaStolen/types/submission"
@@ -19,18 +17,18 @@ func init () {
 
 
 func Cluster(gifts *map[int]gift.Gift) *submission.Submission {
-
-	fmt.Println("Called Cluster algorithm")
 	
 	// Create SQT
-	fmt.Println("Creating spherical quadtree")
+	fmt.Println("Creating SQT....")
+
+	
 	s := sqt.NewSQT()
 	for _, g := range (*gifts) {
 		s.AddNode(g.Id, g.Weight, g.Location.Lat, g.Location.Lon)
 	}
 	
 	// Split the SQT
-	fmt.Print("Splitting the SQT....")
+	fmt.Println("Splitting SQT...")	
 	s.Split(func (tri *sqt.Triangle) bool {
 		retval := false
 		if (math.Ceil(tri.Weight / trip.WeightLimit) > 2) || (len(tri.Nodes) > 10){
@@ -38,10 +36,10 @@ func Cluster(gifts *map[int]gift.Gift) *submission.Submission {
 		 }
 		return retval
 	})	
-	fmt.Println(" count: ",len(s.Triangles))
+	//fmt.Println(" count: ",len(s.Triangles))
 	
 	// Iterate over rectangles
-	fmt.Println("Creating trips...")
+	fmt.Println("Clustering......")	
 	sub:= submission.NewSubmission()
 	tid := 1	
 	for _,tri := range s.Triangles {

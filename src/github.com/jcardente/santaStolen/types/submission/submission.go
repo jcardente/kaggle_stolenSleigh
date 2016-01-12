@@ -7,7 +7,6 @@ import (
 	"math"
 	"sort"
         "encoding/csv"
-        "github.com/jcardente/santaStolen/types/location"
         "github.com/jcardente/santaStolen/types/gift"
         "github.com/jcardente/santaStolen/types/trip"
 )
@@ -125,7 +124,7 @@ func (s *Submission) OptimizeTrips(gifts *map[int]gift.Gift) {
 		}
 	}
 
-	fmt.Println(" LATOPT: ", len(s.Trips), " --> ", len(MergedTrips))
+	//fmt.Println(" LATOPT: ", len(s.Trips), " --> ", len(MergedTrips))
 	s.Trips = MergedTrips
 
 
@@ -143,103 +142,45 @@ func (s *Submission) OptimizeTrips(gifts *map[int]gift.Gift) {
 		}		
 	}
 
-	fmt.Println("Unfilled: ", len(unfilledTrips))
+	//fmt.Println("Unfilled: ", len(unfilledTrips))
 
-	if (false) {
-		// Shelf packing algorithm
-		shelfs := []*trip.Trip{}
-//		sort.Sort(unfilledTrips)		
-		for _, t :=  range unfilledTrips {
-			bestShelf  := -1
-			bestWeight := trip.WeightLimit - t.Weight
-			bestDist   := location.Dist(location.NorthPole,
-				                    (*gifts)[t.Gifts[0]].Location)
-			bestFirst  := false
-			for sid, s := range shelfs {
-				dw := trip.WeightLimit - (s.Weight  + t.Weight)
-
-				if (dw < 0) {
-					continue
-				}
-
-				d1 :=  location.Dist((*gifts)[t.Gifts[len(t.Gifts)-1]].Location,
-					(*gifts)[s.Gifts[0]].Location)
-
-				d2 := location.Dist((*gifts)[s.Gifts[len(s.Gifts)-1]].Location,
-					(*gifts)[s.Gifts[0]].Location)
-
-				dd := math.Min(d1,d2)
-				if (dd < bestDist) && (dw < bestWeight) {
-					bestWeight = dw
-					bestDist   = dd
-					bestShelf  = sid
-					if (d2 < d1) {
-						bestFirst = false
-					}
-				}					
-			}
-
-			if (bestShelf < 0) {
-				shelfs = append(shelfs, t)
-			} else {
-				s := shelfs[bestShelf]
-				if (bestFirst) {
-					s.Gifts = append(t.Gifts, s.Gifts...)
-				} else {
-					s.Gifts = append(s.Gifts, t.Gifts...)
-				}
-				s.CalcWeight(gifts)
-			}
+	sort.Sort(unfilledTrips)
+	skipTrip := map[*trip.Trip]bool{}	
+	for i := 0; i < len(unfilledTrips); i++ {
+		t1 := unfilledTrips[i]
+		if (skipTrip[t1] == true) {
+			continue
 		}
-
-		for _, s := range shelfs {
-			MergedTrips[s.Id] = s
-		}
-
 		
-	}
-
-	if (true) {
-		sort.Sort(unfilledTrips)
-		skipTrip := map[*trip.Trip]bool{}	
-		for i := 0; i < len(unfilledTrips); i++ {
-			t1 := unfilledTrips[i]
-			if (skipTrip[t1] == true) {
+		tnew := &trip.Trip{t1.Id, t1.Gifts, t1.Weight, t1.WRW}
+		for j:=i+1; j < len(unfilledTrips); j++ {
+			t2 := unfilledTrips[j]
+			if (skipTrip[t2] == true) {
 				continue
 			}
-			
-			tnew := &trip.Trip{t1.Id, t1.Gifts, t1.Weight, t1.WRW}
-			for j:=i+1; j < len(unfilledTrips); j++ {
-				t2 := unfilledTrips[j]
-				if (skipTrip[t2] == true) {
-					continue
-				}
 
-				if (tnew.Weight + t2.Weight) > trip.WeightLimit {
-					continue
-				}
-
-				ttest := trip.TripNew(-1)					
-				ttest.Gifts = append(ttest.Gifts, t2.Gifts...)
-				ttest.Gifts = append(ttest.Gifts, tnew.Gifts...)				
-				newscore := ttest.Score(gifts)
-				if (newscore <= (tnew.WRW + t2.WRW)) {
-					tnew.Gifts = append(t2.Gifts, tnew.Gifts...)
-					skipTrip[t2] = true
-					tnew.Score(gifts)
-					tnew.CalcWeight(gifts)
-				}
+			if (tnew.Weight + t2.Weight) > trip.WeightLimit {
+				continue
 			}
-			MergedTrips[tnew.Id] = tnew
+
+			ttest := trip.TripNew(-1)					
+			ttest.Gifts = append(ttest.Gifts, t2.Gifts...)
+			ttest.Gifts = append(ttest.Gifts, tnew.Gifts...)				
+			newscore := ttest.Score(gifts)
+			if (newscore <= (tnew.WRW + t2.WRW)) {
+				tnew.Gifts = append(t2.Gifts, tnew.Gifts...)
+				skipTrip[t2] = true
+				tnew.Score(gifts)
+				tnew.CalcWeight(gifts)
+			}
 		}
-	} // end if false
+		MergedTrips[tnew.Id] = tnew
+	}
 
-	
-	fmt.Println(" SPACEOPT: ", len(s.Trips), " --> ", len(MergedTrips))
+	//fmt.Println(" SPACEOPT: ", len(s.Trips), " --> ", len(MergedTrips))
 	s.Trips = MergedTrips
-
-
 }
+
 
 func (s *Submission) CountUndersize(gifts *map[int]gift.Gift) (int, float64) {
 	count := 0
@@ -256,6 +197,7 @@ func (s *Submission) CountUndersize(gifts *map[int]gift.Gift) (int, float64) {
 	
 	return count, weight
 }
+
 
 func (s *Submission) Validate(gifts *map[int]gift.Gift) bool {
 

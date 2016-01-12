@@ -36,7 +36,7 @@ func main () {
 		fmt.Println("Using gift file: ", *giftFile)
 		fmt.Println(" Using sub file: ",  *subFile)
 		fmt.Println("Using algorithm: ",  *alg)
-		fmt.Println("Using seed: ", *seed)		
+		fmt.Println("     Using seed: ", *seed)		
 	}
 
 	rand.Seed(*seed)
@@ -49,23 +49,25 @@ func main () {
 	}
 	
 	if !*quiet {
-		fmt.Println("Read ", len(gifts) ," gifts")		
+		fmt.Println("Number of Gifts: ", len(gifts) ," gifts")		
 	}
 
 	
 	// RUN SELECTED ALGORITHM -----------------------------------------------
-	fmt.Println("Number of algs", len(algs.Algs))
+	//fmt.Println("Number of algs", len(algs.Algs))
 	s := (algs.Algs[*alg])(&gifts)
 
 
 	// OPTIMIZE -------------------------------------------------------------
 	s.OptimizeTrips(&gifts)
-	c, w :=  s.CountUndersize(&gifts)
-        fmt.Println("Undersized: ", c, " AvgW:", w)
+	//c, w :=  s.CountUndersize(&gifts)
+        //fmt.Println("     Undersized: ", c, " AvgW:", w)
+
 	
         // SCORE AND SAVE -------------------------------------------------------
 	
 	fmt.Println("Number of trips: ", s.NumTrips())
 	fmt.Println(" Solution Score: ", s.Score(&gifts))
+	
 	s.SaveFile(*subFile)
 }
