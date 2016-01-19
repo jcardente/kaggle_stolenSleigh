@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"os"
 	"math"
-//      "github.com/jcardente/santaStolen/types/location"
-//      "github.com/jcardente/santaStolen/types/gift"
-//      "github.com/jcardente/santaStolen/types/trip"
 )
 
 
@@ -64,19 +61,16 @@ func (s *SphereQuadTree) AddNode(id int, w float64, lat float64, lon float64) {
 
 	// Determine relative lat/lon
         dlat := deg2rad(math.Abs(lat))
-	dlon := deg2rad(math.Mod(lon, 90.0)) // - float64((int(math.Abs(lon)) % 90) * 90)
+	dlon := deg2rad(math.Mod(lon, 90.0))
 
 	// Determine XY coordinates for lat/long in RADIANS
 	x, y := triangleProject(dlat, dlon, s.MaxLen)
-
 	if (x < 0) || (y < 0) {
 		fmt.Println(" !!! Bad triangle project: ", x,",",y)
 		os.Exit(1)
 	}
-	// Create node
+
 	n := NewNode(x,y,id,w)
-	
-	// Add it appropriate face
 	s.Triangles[faceIdx].AddNode(n)	
 }
 
@@ -86,8 +80,6 @@ func deg2rad(d float64) float64 {
 }
 
 func whichFace(lat float64, lon float64) int {
-
-	// Determine face
 	faceIdx := 0
 	if lat < 0 {
 		faceIdx += 4
@@ -133,12 +125,11 @@ func (s *SphereQuadTree) Split(cb func(t *Triangle) bool) {
 
 // NODE ------------------------------------------------------------
 
-
 type Node struct {
 	X float64
 	Y float64
 	Id int
-	Weight float64 // caching here to avoid lookups
+	Weight float64 // NB - caching here to avoid lookups
 }
 
 func NewNode(x float64, y float64, id int, w float64) *Node {

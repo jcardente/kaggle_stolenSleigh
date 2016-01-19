@@ -145,13 +145,6 @@ func TestCluster(t *testing.T) {
 		t.Fatal("Incorrect number of clusters")
 	}
 
-	// for cid, c := range clusts {
-	// 	for _, n := range c {
-	// 		t.Log(cid, ": ",n)
-	// 	}
-	// }
-
-
 	nodes = []*sqt.Node{
 		&sqt.Node{1.0,1.0,1,1},
 		&sqt.Node{1.1,1.1,2,1},

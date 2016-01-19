@@ -124,7 +124,6 @@ func (s *Submission) OptimizeTrips(gifts *map[int]gift.Gift) {
 		}
 	}
 
-	//fmt.Println(" LATOPT: ", len(s.Trips), " --> ", len(MergedTrips))
 	s.Trips = MergedTrips
 
 
@@ -141,8 +140,6 @@ func (s *Submission) OptimizeTrips(gifts *map[int]gift.Gift) {
 			MergedTrips[t.Id] = t
 		}		
 	}
-
-	//fmt.Println("Unfilled: ", len(unfilledTrips))
 
 	sort.Sort(unfilledTrips)
 	skipTrip := map[*trip.Trip]bool{}	
@@ -177,7 +174,6 @@ func (s *Submission) OptimizeTrips(gifts *map[int]gift.Gift) {
 		MergedTrips[tnew.Id] = tnew
 	}
 
-	//fmt.Println(" SPACEOPT: ", len(s.Trips), " --> ", len(MergedTrips))
 	s.Trips = MergedTrips
 }
 

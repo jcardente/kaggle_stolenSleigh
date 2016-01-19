@@ -193,10 +193,6 @@ func TestTriNodeSplit(t *testing.T) {
 		t.Fatal("Incorrect number of triangles after split")
 	}
 	
-	//for i, nt := range newTries {
-	//	t.Log("s: ",i," c:", nt.NumNodes()) 
-	//}
-	
 	for _, nt := range newTries {
 		if nt.NumNodes() != 1 {
 			t.Fatal("Incorrect number of nodes after split")
@@ -206,8 +202,6 @@ func TestTriNodeSplit(t *testing.T) {
 
 
 func TestSphereNodeSplit(t *testing.T) {
-
-	//h := math.Sqrt(3)/2
 
 	coords := [][]float64{
 		{22.5, 22.5},

@@ -1,16 +1,11 @@
 package main
 
 import (
-//	"encoding/csv"
 	"flag"
 	"fmt"
 	"os"
 	"math/rand"
-//	"strconv"
-//	"github.com/jcardente/santaStolen/types/location"
 	"github.com/jcardente/santaStolen/types/gift"
-//	"github.com/jcardente/santaStolen/types/trip"
-//	"github.com/jcardente/santaStolen/types/submission"
 	"github.com/jcardente/santaStolen/solve/algs"
 )
 
@@ -54,18 +49,14 @@ func main () {
 
 	
 	// RUN SELECTED ALGORITHM -----------------------------------------------
-	//fmt.Println("Number of algs", len(algs.Algs))
 	s := (algs.Algs[*alg])(&gifts)
 
 
 	// OPTIMIZE -------------------------------------------------------------
 	s.OptimizeTrips(&gifts)
-	//c, w :=  s.CountUndersize(&gifts)
-        //fmt.Println("     Undersized: ", c, " AvgW:", w)
 
 	
-        // SCORE AND SAVE -------------------------------------------------------
-	
+        // SCORE AND SAVE -------------------------------------------------------	
 	fmt.Println("Number of trips: ", s.NumTrips())
 	fmt.Println(" Solution Score: ", s.Score(&gifts))
 	

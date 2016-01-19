@@ -21,8 +21,6 @@ func distance(c Centroid, n *sqt.Node) float64 {
 }
 
 func initCentroids(nodes []*sqt.Node, k int) *[]Centroid {
-
-	// Pick initial centroids
 	centroids := make([]Centroid, k)
 	for c, i := range (rand.Perm(len(nodes)))[:k] {
 		centroids[c] = Centroid{c, nodes[i].X, nodes[i].Y,0, []*sqt.Node{}}
@@ -78,55 +76,30 @@ func closestCentroid(n *sqt.Node, maxWeight float64, centroids *[]Centroid) int 
 
 func Cluster(nodes []*sqt.Node, k int, maxWeight float64) [][]*sqt.Node {
 
-	// Initialize centroids using randomly selected
-	// nodes
 	centroids := initCentroids(nodes, k)
 
-	// Initialize memeberships clusters
 	members := map[*sqt.Node]int{}
 	for _, n := range nodes {
 		members[n] = -1
 	}
 	
-	// Loop until clusters stabilize
+	// Loop until cluster centroids converge
 	converged := false
 	tryCount  := 0
 	deltaLast := math.Inf(0)
 	for (converged == false) {
 		tryCount++
 		changeCount := 0.0
-//		fmt.Println(" ***********************************")				
 		for _, n := range nodes {
 			cid := closestCentroid(n, maxWeight, centroids)
 			
 			if (cid < 0 ) {
-				// Uh oh, didn't find a cluster to fit into
-				// Make a new one				
+				// Didn't find a cluster to fit into,
+				// make a new one				
 				cid = len(*centroids)
 				_c := append(*centroids, Centroid{cid,n.X, n.Y, 0.0, []*sqt.Node{}})
 				centroids = &_c
 
-				// DEBUG
-				// if (len(*centroids) - k) > 5 {
-				// 	fmt.Println("Yikes ", k," ", len(*centroids), " ", tryCount)
-				// 	cw := 0.0
-				// 	for _, ccc := range *centroids {
-				// 		fmt.Println("C:", ccc.Id, " L:",len(ccc.Nodes), " W:", ccc.Weight)
-				// 		cw += ccc.Weight
-				// 	}
-					
-				// 	fmt.Println("")
-
-
-				// 	nw := 0.0
-				// 	for _, n := range nodes {
-				// 		nw += n.Weight
-				// 	}
-					
-				// 	fmt.Println("Nodes: N:", len(nodes), " Weight:", nw, " CW:", cw)
-				// 	os.Exit(1)
-				// }
-				// DEBUG
 			}
 
 			(*centroids)[cid].Weight += n.Weight

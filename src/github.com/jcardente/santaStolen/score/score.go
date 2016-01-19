@@ -1,23 +1,16 @@
 package main
 
-// 144525525772.0
-
 import (
 	"flag"
 	"fmt"
 	"os"
-//	"github.com/jcardente/santaStolen/types/location"
 	"github.com/jcardente/santaStolen/types/gift"
-//	"github.com/jcardente/santaStolen/types/trip"
 	"github.com/jcardente/santaStolen/types/submission"	
 	
 )
 
-
-
-
 var gifts map[int]gift.Gift
-var sub submission.Submission //trips map[int]*trip.Trip
+var sub submission.Submission
 
 func main () {
 	
@@ -37,7 +30,7 @@ func main () {
 		fmt.Println("Using sub file ",  *subFile)
 	}
 
-	// LOAD FILES ------------------------------------------------------------
+	// LOAD FILES -----------------------------------------------------------
         gifts, err := gift.LoadGifts(*giftFile)
 	if err != nil {
 		fmt.Println(err)
@@ -45,7 +38,7 @@ func main () {
 	}
  
 	sub = submission.NewSubmission()
-	err = sub.LoadFile(*subFile) //types.LoadSubmission(*subFile)
+	err = sub.LoadFile(*subFile)
 	 if err != nil {
 	 	fmt.Println(err)
 	 	os.Exit(1)
@@ -58,12 +51,12 @@ func main () {
 	}
 
 
-	// VALIDATE
+	// VALIDATE ------------------------------------------------------------
 	if !sub.Validate(&gifts) {
 		fmt.Println("Solution is NOT valid")
 	}
 	
-	// SCORE ------------------------------------------------------------	
+	// SCORE ---------------------------------------------------------------
 	totalWRW := sub.Score(&gifts)
 	if !*quiet {
 		fmt.Printf("Total WRW ")

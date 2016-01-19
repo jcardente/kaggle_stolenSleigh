@@ -20,7 +20,6 @@ func Cluster(gifts *map[int]gift.Gift) *submission.Submission {
 	
 	// Create SQT
 	fmt.Println("Creating SQT....")
-
 	
 	s := sqt.NewSQT()
 	for _, g := range (*gifts) {
@@ -36,27 +35,23 @@ func Cluster(gifts *map[int]gift.Gift) *submission.Submission {
 		 }
 		return retval
 	})	
-	//fmt.Println(" count: ",len(s.Triangles))
 	
-	// Iterate over rectangles
+	// Iterate over triangles and cluster nodes
 	fmt.Println("Clustering......")	
 	sub:= submission.NewSubmission()
 	tid := 1	
 	for _,tri := range s.Triangles {
 
-		// Skip empty triangles
 		if (tri.NumNodes() == 0) {
 			continue
 		}
 
 		if (len(tri.Nodes) >0 ) {
-			// Cluster the nodes
-			k := int(math.Ceil(tri.Weight/trip.WeightLimit))
 
-			//fmt.Println(" N", len(tri.Nodes), " K", k, " TW", tri.Weight)
+			k := int(math.Ceil(tri.Weight/trip.WeightLimit))
 			clusts := kmeans.Cluster(tri.Nodes, k, trip.WeightLimit)
-		
-			// For each cluster, create a trip
+
+			// Create a trip for each cluster
 			for _, clust := range clusts {
 				t := trip.TripNew(tid)
 				for _, n := range clust {

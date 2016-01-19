@@ -9,7 +9,6 @@ import (
 )
 
 
-
 const (
 	sleighWeight = 10.0
 	WeightLimit  = 1000.0
