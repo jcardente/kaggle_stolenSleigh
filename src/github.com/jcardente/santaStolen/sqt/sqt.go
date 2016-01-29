@@ -23,7 +23,11 @@ func init() {
 //
 //     The only thing that makes this resemble a spherical quadtree
 //     is the mapping from lat/lon to triangle XY coordinates based
-//     on XXXX
+//     on the following paper:
+//
+//     Goodchild, Michael F., and Yang Shiren.
+//     "A hierarchical spatial data structure for global geographic information systems."
+//     CVGIP: Graphical Models and Image Processing 54.1 (1992): 31-44.
 
 
 type SphereQuadTree struct {
